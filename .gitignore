@@ -1,3 +1,10 @@
+# Node
+*.log.*
+
+out/
+dist/
+code.js
+
 # Logs
 logs
 *.log
