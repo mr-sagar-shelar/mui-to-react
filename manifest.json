@@ -1,10 +1,8 @@
 {
-  "name": "mui-to-react",
+  "name": "MUI to ReactJS",
   "id": "1149966427274848144",
   "api": "1.0.0",
   "main": "dist/code.js",
   "ui": "dist/ui.html",
-  "editorType": [
-    "figma"
-  ]
+  "editorType": ["figma"]
 }
