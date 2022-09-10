@@ -6,6 +6,9 @@ import AceEditor from 'react-ace'
 import 'ace-builds/src-noconflict/mode-javascript'
 import 'ace-builds/src-noconflict/mode-html'
 import 'ace-builds/src-noconflict/mode-css'
+import { CssStyle } from './utils/buildCssString'
+import { LanguageType, UnitType } from './utils/buildSizeStringByUnit'
+import { UserComponentSetting } from './utils/UserComponentSetting'
 import 'ace-builds/src-noconflict/theme-monokai'
 import './ui.css'
 import SplitPane, { Pane } from 'react-split-pane-next'
@@ -156,6 +159,11 @@ const darkTheme = createTheme({
 
 const App: React.VFC = () => {
   const [currentCode, setCurrentCode] = React.useState(noInlineExample)
+  const [selectedCssStyle, setCssStyle] = React.useState<CssStyle>('css')
+  const [selectedUnitType, setUnitType] = React.useState<UnitType>('px')
+  const [selectedLanguage, setSelectedLanguage] = React.useState<LanguageType>('javascript')
+  const [userComponentSettings, setUserComponentSettings] = React.useState<UserComponentSetting[]>([])
+
   const scope = { Typography }
 
   const onChange = (newValue: string) => {
@@ -170,10 +178,23 @@ const App: React.VFC = () => {
     })
   }
 
+  React.useEffect(() => {
+    onmessage = (event) => {
+      if (event.data.pluginMessage) {
+        setCssStyle(event.data.pluginMessage.cssStyle)
+        setUnitType(event.data.pluginMessage.unitType)
+        setSelectedLanguage(event.data.pluginMessage.languageType)
+        const codeStr = event.data.pluginMessage.generatedCodeStr + '\n\n' + event.data.pluginMessage.cssString
+        setCurrentCode(codeStr)
+        setUserComponentSettings(event.data.pluginMessage.userComponentSettings)
+      }
+    }
+  }, [])
+
   return (
     <ThemeProvider theme={darkTheme}>
-      <Header onDownloadCilck={onDownloadCilck} />
-      <LiveProvider noInline code={currentCode} scope={scope}>
+      <Header selectedLanguage={selectedLanguage} selectedUnitType={selectedUnitType} selectedCssStyle={selectedCssStyle} onDownloadCilck={onDownloadCilck} />
+      <LiveProvider code={currentCode} scope={scope}>
         <SplitPane split="vertical">
           <Pane initialSize="50%" minSize="30%">
             <AceEditor

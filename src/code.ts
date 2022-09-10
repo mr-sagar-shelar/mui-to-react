@@ -1,34 +1,89 @@
-// This plugin will open a window to prompt the user to enter a number, and
-// it will then create that many rectangles on the screen.
+import { STORAGE_KEYS } from './utils/storageKeys'
+import { LanguageType, UnitType } from './utils/buildSizeStringByUnit'
+import { modifyTreeForComponent } from './utils/modifyTreeForComponent'
+import { buildCode } from './utils/buildCode'
+import { buildTagTree } from './utils/buildTagTree'
+import { buildCssString, CssStyle } from './utils/buildCssString'
+import { UserComponentSetting } from './utils/UserComponentSetting'
+import { TextCount } from './utils/getCssDataForTag'
 
-// This file holds the main code for the plugins. It has access to the *document*.
-// You can access browser APIs in the <script> tag inside "ui.html" which has a
-// full browser environment (see documentation).
-
-// This shows the HTML page in "ui.html".
 figma.showUI(__html__, { width: 800, height: 800 })
 
-// Calls to "parent.postMessage" from within the HTML page will trigger this
-// callback. The callback will be passed the "pluginMessage" property of the
-// posted message.
-figma.ui.onmessage = msg => {
-  // One way of distinguishing between different types of messages sent from
-  // your HTML page is to use an object with a "type" property like this.
-  if (msg.type === 'create-rectangles') {
-    const nodes: SceneNode[] = [];
-    for (let i = 0; i < msg.count; i++) {
-      const rect = figma.createRectangle();
-      rect.x = i * 150;
-      rect.fills = [{type: 'SOLID', color: {r: 1, g: 0.5, b: 0}}];
-      figma.currentPage.appendChild(rect);
-      nodes.push(rect);
+const selectedNodes = figma.currentPage.selection
+
+async function generate(node: SceneNode, config: { cssStyle?: CssStyle; unitType?: UnitType; languageType?: LanguageType }) {
+  let cssStyle = config.cssStyle
+  if (!cssStyle) {
+    cssStyle = await figma.clientStorage.getAsync(STORAGE_KEYS.CSS_STYLE_KEY)
+
+    if (!cssStyle) {
+      cssStyle = 'css'
     }
-    figma.currentPage.selection = nodes;
-    figma.viewport.scrollAndZoomIntoView(nodes);
   }
 
-  // Make sure to close the plugin when you're done. Otherwise the plugin will
-  // keep running, which shows the cancel button at the bottom of the screen.
-  figma.closePlugin();
-};
+  let unitType = config.unitType
+  if (!unitType) {
+    unitType = await figma.clientStorage.getAsync(STORAGE_KEYS.UNIT_TYPE_KEY)
 
+    if (!unitType) {
+      unitType = 'px'
+    }
+  }
+
+  let languageType = config.languageType
+  if (!languageType) {
+    languageType = await figma.clientStorage.getAsync(STORAGE_KEYS.LANGUAGE_KEY)
+
+    if (!languageType) {
+      languageType = 'javascript'
+    }
+  }
+
+  const userComponentSettings: UserComponentSetting[] = (await figma.clientStorage.getAsync(STORAGE_KEYS.USER_COMPONENT_SETTINGS_KEY)) || []
+
+  const textCount = new TextCount()
+
+  const originalTagTree = buildTagTree(node, unitType, textCount)
+  if (originalTagTree === null) {
+    figma.notify('Please select a visible node')
+    return
+  }
+
+  const tag = await modifyTreeForComponent(originalTagTree, figma)
+  const generatedCodeStr = buildCode(tag, cssStyle)
+  const cssString = buildCssString(tag, cssStyle)
+
+  figma.ui.postMessage({ generatedCodeStr, cssString, cssStyle, unitType, languageType, userComponentSettings })
+}
+
+if (selectedNodes.length > 1) {
+  figma.notify('Please select only 1 node')
+  figma.closePlugin()
+} else if (selectedNodes.length === 0) {
+  figma.notify('Please select a node')
+  figma.closePlugin()
+} else {
+  generate(selectedNodes[0], {})
+}
+
+figma.ui.onmessage = (msg) => {
+  if (msg.type === 'notify-copy-success') {
+    figma.notify('copied to clipboard👍')
+  }
+  if (msg.type === 'new-css-style-set') {
+    figma.clientStorage.setAsync(STORAGE_KEYS.CSS_STYLE_KEY, msg.cssStyle)
+    generate(selectedNodes[0], { cssStyle: msg.cssStyle })
+  }
+  if (msg.type === 'new-unit-type-set') {
+    figma.clientStorage.setAsync(STORAGE_KEYS.UNIT_TYPE_KEY, msg.unitType)
+    generate(selectedNodes[0], { unitType: msg.unitType })
+  }
+  if (msg.type === 'new-language-set') {
+    figma.clientStorage.setAsync(STORAGE_KEYS.LANGUAGE_KEY, msg.languageType)
+    generate(selectedNodes[0], { languageType: msg.languageType })
+  }
+  if (msg.type === 'update-user-component-settings') {
+    figma.clientStorage.setAsync(STORAGE_KEYS.USER_COMPONENT_SETTINGS_KEY, msg.userComponentSettings)
+    generate(selectedNodes[0], {})
+  }
+}

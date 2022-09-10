@@ -13,8 +13,28 @@ import Toolbar from '@mui/material/Toolbar'
 import Typography from '@mui/material/Typography'
 import InputLabel from '@mui/material/InputLabel'
 import MenuItem from '@mui/material/MenuItem'
+import { CssStyle } from '../utils/buildCssString'
+import { UnitType, LanguageType } from '../utils/buildSizeStringByUnit'
 import FormControl from '@mui/material/FormControl'
 import Select, { SelectChangeEvent } from '@mui/material/Select'
+import { messageTypes } from '../utils/messageTypes'
+
+const cssStyles: { value: CssStyle; label: string }[] = [
+  { value: 'css', label: 'CSS' },
+  { value: 'styled-components', label: 'Styled Components' }
+]
+
+const languageTypes: { value: LanguageType; label: string }[] = [
+  { value: 'javascript', label: 'Javascript' },
+  { value: 'typescript', label: 'Typescript' }
+]
+
+const unitTypes: { value: UnitType; label: string }[] = [
+  { value: 'sx', label: 'sx' },
+  { value: 'px', label: 'px' },
+  { value: 'rem', label: 'rem' },
+  { value: 'remAs10px', label: 'rem(as 10px)' }
+]
 
 interface Props {
   /**
@@ -23,6 +43,9 @@ interface Props {
    */
   window?: () => Window
   onDownloadCilck: () => void
+  selectedCssStyle: CssStyle
+  selectedLanguage: LanguageType
+  selectedUnitType: UnitType
 }
 
 const drawerWidth = 240
@@ -30,20 +53,20 @@ const drawerWidth = 240
 export default function DrawerAppBar(props: Props) {
   const { window } = props
   const [mobileOpen, setMobileOpen] = React.useState(false)
-  const [language, setLanguage] = React.useState('1')
-  const [styleType, setStyleType] = React.useState('1')
-  const [spacing, setSpacing] = React.useState('1')
 
   const onLanguageChange = (event: SelectChangeEvent) => {
-    setLanguage(event.target.value)
+    const msg: messageTypes = { type: 'new-language-set', languageType: event.target.value as LanguageType }
+    parent.postMessage({ pluginMessage: msg }, '*')
   }
 
   const onStyleChange = (event: SelectChangeEvent) => {
-    setStyleType(event.target.value)
+    const msg: messageTypes = { type: 'new-css-style-set', cssStyle: event.target.value as CssStyle }
+    parent.postMessage({ pluginMessage: msg }, '*')
   }
 
-  const onSpacingChange = (event: SelectChangeEvent) => {
-    setSpacing(event.target.value)
+  const onUnitChange = (event: SelectChangeEvent) => {
+    const msg: messageTypes = { type: 'new-unit-type-set', unitType: event.target.value as UnitType }
+    parent.postMessage({ pluginMessage: msg }, '*')
   }
 
   const handleDrawerToggle = () => {
@@ -75,31 +98,38 @@ export default function DrawerAppBar(props: Props) {
           <IconButton color="inherit" aria-label="open drawer" edge="start" onClick={handleDrawerToggle} sx={{ mr: 2 }}>
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}>
+          {/* <Typography variant="h6" component="div" sx={{ flexGrow: 1, display: { xs: 'none', sm: 'block' } }}>
             MUI to React
-          </Typography>
+          </Typography> */}
           <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
             <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
               <InputLabel id="demo-simple-select-standard-label">Language</InputLabel>
-              <Select labelId="demo-simple-select-standard-label" id="demo-simple-select-standard" value={language} onChange={onLanguageChange} label="Language">
-                <MenuItem value={1}>Javascript</MenuItem>
-                <MenuItem value={2}>Typescript</MenuItem>
+              <Select labelId="demo-simple-select-standard-label" id="demo-simple-select-standard" value={props.selectedLanguage} onChange={onLanguageChange} label="Language">
+                {languageTypes.map((style) => (
+                  <MenuItem key={style.value} value={style.value}>
+                    {style.label}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
             <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
               <InputLabel id="demo-simple-select-standard-label">Style Type</InputLabel>
-              <Select labelId="demo-simple-select-standard-label" id="demo-simple-select-standard" value={styleType} onChange={onStyleChange} label="Language">
-                <MenuItem value={1}>CSS</MenuItem>
-                <MenuItem value={2}>Styled Components</MenuItem>
+              <Select labelId="demo-simple-select-standard-label" id="demo-simple-select-standard" value={props.selectedCssStyle} onChange={onStyleChange} label="Style Type">
+                {cssStyles.map((style) => (
+                  <MenuItem key={style.value} value={style.value}>
+                    {style.label}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
             <FormControl sx={{ m: 1, minWidth: 120 }} size="small">
-              <InputLabel id="demo-simple-select-standard-label">Spacing</InputLabel>
-              <Select labelId="demo-simple-select-standard-label" id="demo-simple-select-standard" value={spacing} onChange={onSpacingChange} label="Language">
-                <MenuItem value={1}>sx</MenuItem>
-                <MenuItem value={2}>px</MenuItem>
-                <MenuItem value={3}>rem</MenuItem>
-                <MenuItem value={4}>rem(as 10px)</MenuItem>
+              <InputLabel id="demo-simple-select-standard-label">Units</InputLabel>
+              <Select labelId="demo-simple-select-standard-label" id="demo-simple-select-standard" value={props.selectedUnitType} onChange={onUnitChange} label="Units">
+                {unitTypes.map((style) => (
+                  <MenuItem key={style.value} value={style.value}>
+                    {style.label}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Box>
