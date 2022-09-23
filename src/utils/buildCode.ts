@@ -1,4 +1,4 @@
-import { capitalizeFirstLetter } from './stringUtils'
+import { capitalizeFirstLetter, trimSpecialCharacters } from './stringUtils'
 import { Tag } from './buildTagTree'
 import { buildClassName } from './cssUtils'
 
@@ -79,17 +79,26 @@ function buildJsxString(tag: Tag, cssStyle: CssStyle, level: number) {
   const className = getClassName(tag, cssStyle)
   const properties = tag.properties.map(buildPropertyString).join('')
 
-  const openingTag = `${spaceString}<${tagName}${className}${properties}${hasChildren || tag.isText ? `` : ' /'}>`
+  const openingTag = trimSpecialCharacters(`${spaceString}<${tagName}${className}${properties}${hasChildren || tag.isText ? `` : ' /'}>`)
   const childTags = buildChildTagsString(tag, cssStyle, level)
-  const closingTag = hasChildren || tag.isText ? `${!tag.isText ? '\n' + spaceString : ''}</${tagName}>` : ''
+  const closingTag = hasChildren || tag.isText ? `${!tag.isText ? '\n' + spaceString : ''}</${trimSpecialCharacters(tagName)}>` : ''
+
+  const isTextTag = openingTag.trim() == '<Text>'
+  // console.log(` OT = ${openingTag}, length = ${openingTag.trim().length} isTextTag = ${isTextTag}`)
+  if (isTextTag) {
+    return openingTag.replace('<Text>', '') + childTags + closingTag.replace('</Text>', '')
+  }
 
   return openingTag + childTags + closingTag
 }
 
 export function buildCode(tag: Tag, css: CssStyle): string {
-  return `const ${capitalizeFirstLetter(tag.name.replace(/\s/g, ''))}: React.VFC = () => {
+  const rootComponentName = trimSpecialCharacters(capitalizeFirstLetter(tag.name.replace(/\s/g, ''))) + 'Comp'
+  return `const ${rootComponentName} = () => {
   return (
 ${buildJsxString(tag, css, 0)}
   )
-}`
+}
+
+render(<${rootComponentName} />)`
 }

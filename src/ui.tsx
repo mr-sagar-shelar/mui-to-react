@@ -10,11 +10,11 @@ import CssBaseline from '@mui/material/CssBaseline'
 import JSZip from 'jszip'
 import Editor from './components/Editor'
 import { darkTheme } from './theme'
-import { materialButton } from './SampleCode'
+import { styledComponent as sampleCode } from './SampleCode'
 const zip = new JSZip()
 
 const App: React.VFC = () => {
-  const [currentCode, setCurrentCode] = React.useState(materialButton)
+  const [currentCode, setCurrentCode] = React.useState(sampleCode)
   const [selectedCssStyle, setCssStyle] = React.useState<CssStyle>('css')
   const [selectedUnitType, setUnitType] = React.useState<UnitType>('px')
   const [selectedLanguage, setSelectedLanguage] = React.useState<LanguageType>('javascript')
@@ -34,8 +34,9 @@ const App: React.VFC = () => {
         setCssStyle(event.data.pluginMessage.cssStyle)
         setUnitType(event.data.pluginMessage.unitType)
         setSelectedLanguage(event.data.pluginMessage.languageType)
-        const codeStr = event.data.pluginMessage.generatedCodeStr + '\n\n' + event.data.pluginMessage.cssString
+        const codeStr = event.data.pluginMessage.cssString + '\n\n' + event.data.pluginMessage.generatedCodeStr
         setCurrentCode(codeStr)
+        // console.log(`${codeStr}`)
         setUserComponentSettings(event.data.pluginMessage.userComponentSettings)
       }
     }

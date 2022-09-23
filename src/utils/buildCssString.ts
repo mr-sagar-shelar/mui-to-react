@@ -1,6 +1,7 @@
 import { CSSData } from './getCssDataForTag'
 import { Tag } from './buildTagTree'
 import { buildClassName } from './cssUtils'
+import { trimSpecialCharacters } from './stringUtils'
 
 export type CssStyle = 'css' | 'styled-components'
 
@@ -29,7 +30,7 @@ export function buildCssString(tag: Tag, cssStyle: CssStyle): string {
     }
     const cssStr =
       cssStyle === 'styled-components'
-        ? `const ${cssData?.className.replace(/\s/g, '')} = styled.div\`
+        ? `const ${trimSpecialCharacters(cssData?.className.replace(/\s/g, ''))} = styled.div\`
 ${cssData.properties.map((property) => `  ${property.name}: ${property.value};`).join('\n')}
 \`\n`
         : `.${buildClassName(cssData?.className)} {

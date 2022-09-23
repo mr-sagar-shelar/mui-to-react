@@ -12,6 +12,10 @@ export function capitalizeFirstLetter(str: string): string {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
+export function trimSpecialCharacters(str: string): string {
+  return str.replaceAll('/', '')
+}
+
 export function kebabToUpperCamel(str: string): string {
   return capitalizeFirstLetter(str.split(/-|_/g).map(capitalizeFirstLetter).join(''))
 }

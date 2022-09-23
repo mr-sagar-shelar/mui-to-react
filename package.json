@@ -31,6 +31,7 @@
     "react-live": "^2.4.1",
     "react-split-pane": "^2.0.3",
     "react-split-pane-next": "^1.0.5",
+    "styled-components": "^5.3.5",
     "webpack": "^4.41.4",
     "webpack-cli": "^3.3.6"
   },
@@ -43,6 +44,7 @@
     "@types/jest": "26.0.24",
     "@types/react": "17.0.36",
     "@types/react-dom": "17.0.3",
+    "@types/styled-components": "^5.1.26",
     "@typescript-eslint/eslint-plugin": "4.20.0",
     "@typescript-eslint/parser": "4.20.0",
     "babel-jest": "27.0.6",
